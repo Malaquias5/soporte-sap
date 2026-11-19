@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoporteSAP Desk</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f4f6fa; color: #1c2333; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px; }
+    header { background: #0a6ed1; color: #fff; padding: 48px 0; text-align: center; }
+    header h1 { margin: 0 0 8px; font-size: 2.2rem; }
+    header p { margin: 0; opacity: .9; }
+    .card { background: #fff; border: 1px solid #dde3ec; border-radius: 10px; padding: 20px; margin: 24px 0; }
+    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    label { font-size: .85rem; font-weight: 600; display: flex; flex-direction: column; gap: 4px; }
+    .full { grid-column: 1 / -1; }
+    input, select, textarea { padding: 8px; border: 1px solid #ccd3de; border-radius: 6px; font: inherit; }
+    button { padding: 8px 14px; border: 0; border-radius: 6px; background: #0a6ed1; color: #fff; cursor: pointer; }
+    button.sec { background: #e8edf5; color: #1c2333; }
+    button.del { background: #c0392b; }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+    td.acc { white-space: nowrap; }
+    .barra { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .pag { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 16px; }
+    button:disabled { opacity: .4; cursor: default; }
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+    .tag.abierto { background: #fdecea; color: #b71c1c; }
+    .tag.proceso { background: #fff6d5; color: #8a6d00; }
+    .tag.cerrado { background: #e3f5e5; color: #1b5e20; }
+    .ver { text-align: center; margin: 24px 0; }
+  </style>
+</head>
+<body>
+  <!-- Landing -->
+  <header>
+    <div class="wrap">
+      <h1>SoporteSAP Desk</h1>
+      <p>La mesa de ayuda simple para consultores SAP: registra, prioriza y cierra tus tickets.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Formulario -->
+    <section class="card">
+      <h2 id="titulo">Nuevo ticket</h2>
+      <form id="form">
+        <label>Cliente <input id="cliente" required></label>
+        <label>Módulo SAP
+          <select id="modulo_sap">
+            <option>FI</option><option>CO</option><option>MM</option><option>SD</option>
+            <option>PP</option><option>HCM</option><option>BASIS</option><option>ABAP</option>
+          </select>
+        </label>
+        <label>Prioridad
+          <select id="prioridad"><option>Baja</option><option selected>Media</option><option>Alta</option></select>
+        </label>
+        <label class="full">Descripción <textarea id="descripcion" rows="3" required></textarea></label>
+        <div class="full">
+          <button type="submit" id="guardar">Crear ticket</button>
+          <button type="button" class="sec" id="cancelar" hidden>Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="ver"><button id="ver">Ver todos los tickets</button></div>
+
+    <!-- Tabla de tickets (oculta hasta pulsar el botón) -->
+    <section class="card scroll" id="seccion" hidden>
+      <div class="barra">
+        <h2>Tickets</h2>
+        <label>Filtrar por estado
+          <select id="filtro">
+            <option value="">Todos</option><option>Abierto</option><option>En proceso</option><option>Cerrado</option>
+          </select>
+        </label>
+      </div>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Cliente</th><th>Módulo</th><th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="lista"></tbody>
+      </table>
+      <div class="pag">
+        <button class="sec" id="anterior">Anterior</button>
+        <span id="pagina">Pagina 1 de 1</span>
+        <button class="sec" id="siguiente">Siguiente</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ESTADOS = ['Abierto', 'En proceso', 'Cerrado'];
+    const $ = (id) => document.getElementById(id);
+    const CLASES = { 'Abierto': 'abierto', 'En proceso': 'proceso', 'Cerrado': 'cerrado' };
+    const LIMITE = 5;
+    let tickets = [];
+    let editandoId = null;
+    let pagina = 1;
+    let totalPaginas = 1;
+
+    // Evita inyectar HTML
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+    // Llamada a la API
+    async function api(url, method = 'GET', body) {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: body && JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Error');
+      return res.status === 204 ? null : res.json();
+    }
+
+    // Cargar la página actual (con filtro) y pintar la tabla
+    async function cargar() {
+      if ($('seccion').hidden) return;
+      const estado = $('filtro').value;
+      const datos = await api(`/api/tickets?page=${pagina}&limit=${LIMITE}&estado=${encodeURIComponent(estado)}`);
+      totalPaginas = Math.max(Math.ceil(datos.total / LIMITE), 1);
+      // Si la página quedó vacía (p. ej. tras eliminar), retroceder
+      if (pagina > totalPaginas) { pagina = totalPaginas; return cargar(); }
+      tickets = datos.tickets;
+      $('pagina').textContent = `Pagina ${pagina} de ${totalPaginas}`;
+      $('anterior').disabled = pagina <= 1;
+      $('siguiente').disabled = pagina >= totalPaginas;
+      $('lista').innerHTML = tickets.length ? tickets.map((t) => `
+        <tr>
+          <td>${t.id}</td>
+          <td>${esc(t.cliente)}</td>
+          <td>${esc(t.modulo_sap)}</td>
+          <td>${esc(t.descripcion)}</td>
+          <td>${esc(t.prioridad)}</td>
+          <td><span class="tag ${CLASES[t.estado] || ''}">${esc(t.estado)}</span></td>
+          <td class="acc">
+            <select aria-label="Cambiar estado" onchange="cambiarEstado(${t.id}, this.value)">
+              ${ESTADOS.map((e) => `<option ${e === t.estado ? 'selected' : ''}>${e}</option>`).join('')}
+            </select>
+            <button class="sec" onclick="editar(${t.id})">Editar</button>
+            <button class="del" onclick="eliminar(${t.id})">Eliminar</button>
+          </td>
+        </tr>`).join('') : '<tr><td colspan="7">No hay tickets.</td></tr>';
+    }
+
+    // Mostrar/ocultar la lista
+    $('ver').addEventListener('click', () => {
+      $('seccion').hidden = !$('seccion').hidden;
+      $('ver').textContent = $('seccion').hidden ? 'Ver todos los tickets' : 'Ocultar tickets';
+      mostrarError(cargar());
+    });
+
+    // Paginación y filtro
+    $('anterior').addEventListener('click', () => { pagina--; mostrarError(cargar()); });
+    $('siguiente').addEventListener('click', () => { pagina++; mostrarError(cargar()); });
+    $('filtro').addEventListener('change', () => { pagina = 1; mostrarError(cargar()); });
+
+    // Mensaje si falla la carga
+    function mostrarError(promesa) {
+      promesa.catch(() => { $('lista').innerHTML = '<tr><td colspan="7">No se pudo conectar con el servidor.</td></tr>'; });
+    }
+
+    // Crear o guardar edición
+    $('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const datos = {
+        cliente: $('cliente').value,
+        modulo_sap: $('modulo_sap').value,
+        descripcion: $('descripcion').value,
+        prioridad: $('prioridad').value,
+      };
+      try {
+        if (editandoId) await api(`/api/tickets/${editandoId}`, 'PUT', datos);
+        else await api('/api/tickets', 'POST', datos);
+        limpiar();
+        cargar();
+      } catch (err) { alert(err.message); }
+    });
+
+    // Cambiar estado desde la tabla
+    async function cambiarEstado(id, estado) {
+      await api(`/api/tickets/${id}`, 'PUT', { estado }).catch((err) => alert(err.message));
+      mostrarError(cargar()); // refresca etiqueta y filtro
+    }
+
+    // Pasar un ticket al formulario
+    function editar(id) {
+      const t = tickets.find((x) => x.id === id);
+      editandoId = id;
+      $('cliente').value = t.cliente;
+      $('modulo_sap').value = t.modulo_sap;
+      $('descripcion').value = t.descripcion;
+      $('prioridad').value = t.prioridad;
+      $('titulo').textContent = `Editar ticket #${id}`;
+      $('guardar').textContent = 'Guardar cambios';
+      $('cancelar').hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Borrar ticket
+    async function eliminar(id) {
+      if (!confirm(`¿Eliminar el ticket #${id}?`)) return;
+      await api(`/api/tickets/${id}`, 'DELETE').catch((err) => alert(err.message));
+      if (editandoId === id) limpiar();
+      cargar();
+    }
+
+    // Volver al modo "crear"
+    function limpiar() {
+      editandoId = null;
+      $('form').reset();
+      $('titulo').textContent = 'Nuevo ticket';
+      $('guardar').textContent = 'Crear ticket';
+      $('cancelar').hidden = true;
+    }
+
+    $('cancelar').addEventListener('click', limpiar);
+  </script>
+</body>
+</html>
