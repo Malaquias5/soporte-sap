@@ -78,7 +78,7 @@
       </div>
       <table>
         <thead>
-          <tr><th>#</th><th>Cliente</th><th>Módulo</th><th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Acciones</th></tr>
+          <tr><th>N°</th><th>ID</th><th>Cliente</th><th>Módulo</th><th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Acciones</th></tr>
         </thead>
         <tbody id="lista"></tbody>
       </table>
@@ -126,8 +126,9 @@
       $('pagina').textContent = `Pagina ${pagina} de ${totalPaginas}`;
       $('anterior').disabled = pagina <= 1;
       $('siguiente').disabled = pagina >= totalPaginas;
-      $('lista').innerHTML = tickets.length ? tickets.map((t) => `
+      $('lista').innerHTML = tickets.length ? tickets.map((t, i) => `
         <tr>
+          <td>${(pagina - 1) * LIMITE + i + 1}</td>
           <td>${t.id}</td>
           <td>${esc(t.cliente)}</td>
           <td>${esc(t.modulo_sap)}</td>
@@ -141,7 +142,7 @@
             <button class="sec" onclick="editar(${t.id})">Editar</button>
             <button class="del" onclick="eliminar(${t.id})">Eliminar</button>
           </td>
-        </tr>`).join('') : '<tr><td colspan="7">No hay tickets.</td></tr>';
+        </tr>`).join('') : '<tr><td colspan="8">No hay tickets.</td></tr>';
     }
 
     // Mostrar/ocultar la lista
@@ -158,7 +159,7 @@
 
     // Mensaje si falla la carga
     function mostrarError(promesa) {
-      promesa.catch(() => { $('lista').innerHTML = '<tr><td colspan="7">No se pudo conectar con el servidor.</td></tr>'; });
+      promesa.catch(() => { $('lista').innerHTML = '<tr><td colspan="8">No se pudo conectar con el servidor.</td></tr>'; });
     }
 
     // Crear o guardar edición

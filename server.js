@@ -30,7 +30,7 @@ app.get('/api/tickets', async (req, res) => {
   const estado = req.query.estado || null;
   const filtro = 'WHERE $1::text IS NULL OR estado = $1';
   const total = (await pool.query(`SELECT COUNT(*)::int AS n FROM tickets ${filtro}`, [estado])).rows[0].n;
-  const { rows } = await pool.query(`SELECT * FROM tickets ${filtro} ORDER BY id DESC LIMIT $2 OFFSET $3`,
+  const { rows } = await pool.query(`SELECT * FROM tickets ${filtro} ORDER BY id ASC LIMIT $2 OFFSET $3`,
     [estado, limit, (page - 1) * limit]);
   res.json({ tickets: rows, total });
 });
