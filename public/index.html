@@ -4,49 +4,102 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SoporteSAP Desk</title>
-  <style>
-    body { margin: 0; font-family: system-ui, sans-serif; background: #f4f6fa; color: #1c2333; }
-    .wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px; }
-    header { background: #0a6ed1; color: #fff; padding: 48px 0; text-align: center; }
-    header h1 { margin: 0 0 8px; font-size: 2.2rem; }
-    header p { margin: 0; opacity: .9; }
-    .card { background: #fff; border: 1px solid #dde3ec; border-radius: 10px; padding: 20px; margin: 24px 0; }
-    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-    label { font-size: .85rem; font-weight: 600; display: flex; flex-direction: column; gap: 4px; }
-    .full { grid-column: 1 / -1; }
-    input, select, textarea { padding: 8px; border: 1px solid #ccd3de; border-radius: 6px; font: inherit; }
-    button { padding: 8px 14px; border: 0; border-radius: 6px; background: #0a6ed1; color: #fff; cursor: pointer; }
-    button.sec { background: #e8edf5; color: #1c2333; }
-    button.del { background: #c0392b; }
-    .scroll { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; vertical-align: top; }
-    td.acc { white-space: nowrap; }
-    .barra { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-    .pag { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 16px; }
-    button:disabled { opacity: .4; cursor: default; }
-    .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; }
-    .tag.abierto { background: #fdecea; color: #b71c1c; }
-    .tag.proceso { background: #fff6d5; color: #8a6d00; }
-    .tag.cerrado { background: #e3f5e5; color: #1b5e20; }
-    .ver { text-align: center; margin: 24px 0; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script type="module" src="assets/js/app.js"></script>
 </head>
 <body>
-  <!-- Landing -->
-  <header>
-    <div class="wrap">
-      <h1>SoporteSAP Desk</h1>
-      <p>La mesa de ayuda simple para consultores SAP: registra, prioriza y cierra tus tickets.</p>
-    </div>
-  </header>
+  <div class="layout">
+    <!-- Barra lateral -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-logo">S</span>
+        <div>
+          <strong>SoporteSAP</strong>
+          <small>Service Desk</small>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="nav-item active" href="#">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3zm0 8h8v-6H3zm10 0h8V11h-8zm0-18v6h8V3z"/></svg>
+          Panel de tickets
+        </a>
+        <button class="nav-item" type="button" data-accion="nuevo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>
+          Nuevo ticket
+        </button>
+      </nav>
+      <p class="sidebar-foot">v1.0 · Mesa de ayuda SAP</p>
+    </aside>
 
-  <main class="wrap">
-    <!-- Formulario -->
-    <section class="card">
-      <h2 id="titulo">Nuevo ticket</h2>
-      <form id="form">
-        <label>Cliente <input id="cliente" required></label>
+    <!-- Contenido -->
+    <div class="content">
+      <header class="topbar">
+        <div>
+          <h1>Panel de tickets</h1>
+          <p class="muted">Registra, prioriza y cierra las incidencias de tus clientes SAP.</p>
+        </div>
+        <button class="btn btn-primary" type="button" data-accion="nuevo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>
+          Nuevo ticket
+        </button>
+      </header>
+
+      <main class="main">
+        <!-- Indicadores -->
+        <section class="kpis" aria-label="Resumen">
+          <article class="kpi"><span class="kpi-label">Total</span><strong id="kpi-total">–</strong></article>
+          <article class="kpi kpi-abierto"><span class="kpi-label">Abiertos</span><strong id="kpi-abierto">–</strong></article>
+          <article class="kpi kpi-proceso"><span class="kpi-label">En proceso</span><strong id="kpi-proceso">–</strong></article>
+          <article class="kpi kpi-cerrado"><span class="kpi-label">Cerrados</span><strong id="kpi-cerrado">–</strong></article>
+        </section>
+
+        <!-- Tabla -->
+        <section class="card">
+          <div class="card-head">
+            <h2>Tickets</h2>
+            <div class="segmented" id="filtro" role="tablist" aria-label="Filtrar por estado">
+              <button type="button" class="active" data-estado="">Todos</button>
+              <button type="button" data-estado="Abierto">Abierto</button>
+              <button type="button" data-estado="En proceso">En proceso</button>
+              <button type="button" data-estado="Cerrado">Cerrado</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>N°</th><th>ID</th><th>Cliente</th><th>Módulo</th><th>Descripción</th>
+                  <th>Prioridad</th><th>Estado</th><th class="right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="lista"><tr><td colspan="8" class="empty">Cargando…</td></tr></tbody>
+            </table>
+          </div>
+          <footer class="card-foot">
+            <span class="muted" id="resumen-pag"></span>
+            <div class="pager">
+              <button class="btn btn-ghost" id="anterior" type="button">Anterior</button>
+              <span id="pagina">Página 1 de 1</span>
+              <button class="btn btn-ghost" id="siguiente" type="button">Siguiente</button>
+            </div>
+          </footer>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Formulario (crear / editar) -->
+  <dialog id="modal">
+    <form id="form" method="dialog">
+      <header class="modal-head">
+        <h2 id="titulo">Nuevo ticket</h2>
+        <button type="button" class="icon-btn" id="cerrar" aria-label="Cerrar">✕</button>
+      </header>
+      <div class="grid">
+        <label>Cliente <input id="cliente" required autocomplete="off"></label>
         <label>Módulo SAP
           <select id="modulo_sap">
             <option>FI</option><option>CO</option><option>MM</option><option>SD</option>
@@ -56,167 +109,15 @@
         <label>Prioridad
           <select id="prioridad"><option>Baja</option><option selected>Media</option><option>Alta</option></select>
         </label>
-        <label class="full">Descripción <textarea id="descripcion" rows="3" required></textarea></label>
-        <div class="full">
-          <button type="submit" id="guardar">Crear ticket</button>
-          <button type="button" class="sec" id="cancelar" hidden>Cancelar</button>
-        </div>
-      </form>
-    </section>
-
-    <div class="ver"><button id="ver">Ver todos los tickets</button></div>
-
-    <!-- Tabla de tickets (oculta hasta pulsar el botón) -->
-    <section class="card scroll" id="seccion" hidden>
-      <div class="barra">
-        <h2>Tickets</h2>
-        <label>Filtrar por estado
-          <select id="filtro">
-            <option value="">Todos</option><option>Abierto</option><option>En proceso</option><option>Cerrado</option>
-          </select>
-        </label>
+        <label class="full">Descripción <textarea id="descripcion" rows="4" required></textarea></label>
       </div>
-      <table>
-        <thead>
-          <tr><th>N°</th><th>ID</th><th>Cliente</th><th>Módulo</th><th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Acciones</th></tr>
-        </thead>
-        <tbody id="lista"></tbody>
-      </table>
-      <div class="pag">
-        <button class="sec" id="anterior">Anterior</button>
-        <span id="pagina">Pagina 1 de 1</span>
-        <button class="sec" id="siguiente">Siguiente</button>
-      </div>
-    </section>
-  </main>
+      <footer class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="guardar">Crear ticket</button>
+      </footer>
+    </form>
+  </dialog>
 
-  <script>
-    const ESTADOS = ['Abierto', 'En proceso', 'Cerrado'];
-    const $ = (id) => document.getElementById(id);
-    const CLASES = { 'Abierto': 'abierto', 'En proceso': 'proceso', 'Cerrado': 'cerrado' };
-    const LIMITE = 5;
-    let tickets = [];
-    let editandoId = null;
-    let pagina = 1;
-    let totalPaginas = 1;
-
-    // Evita inyectar HTML
-    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-
-    // Llamada a la API
-    async function api(url, method = 'GET', body) {
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: body && JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Error');
-      return res.status === 204 ? null : res.json();
-    }
-
-    // Cargar la página actual (con filtro) y pintar la tabla
-    async function cargar() {
-      if ($('seccion').hidden) return;
-      const estado = $('filtro').value;
-      const datos = await api(`/api/tickets?page=${pagina}&limit=${LIMITE}&estado=${encodeURIComponent(estado)}`);
-      totalPaginas = Math.max(Math.ceil(datos.total / LIMITE), 1);
-      // Si la página quedó vacía (p. ej. tras eliminar), retroceder
-      if (pagina > totalPaginas) { pagina = totalPaginas; return cargar(); }
-      tickets = datos.tickets;
-      $('pagina').textContent = `Pagina ${pagina} de ${totalPaginas}`;
-      $('anterior').disabled = pagina <= 1;
-      $('siguiente').disabled = pagina >= totalPaginas;
-      $('lista').innerHTML = tickets.length ? tickets.map((t, i) => `
-        <tr>
-          <td>${(pagina - 1) * LIMITE + i + 1}</td>
-          <td>${t.id}</td>
-          <td>${esc(t.cliente)}</td>
-          <td>${esc(t.modulo_sap)}</td>
-          <td>${esc(t.descripcion)}</td>
-          <td>${esc(t.prioridad)}</td>
-          <td><span class="tag ${CLASES[t.estado] || ''}">${esc(t.estado)}</span></td>
-          <td class="acc">
-            <select aria-label="Cambiar estado" onchange="cambiarEstado(${t.id}, this.value)">
-              ${ESTADOS.map((e) => `<option ${e === t.estado ? 'selected' : ''}>${e}</option>`).join('')}
-            </select>
-            <button class="sec" onclick="editar(${t.id})">Editar</button>
-            <button class="del" onclick="eliminar(${t.id})">Eliminar</button>
-          </td>
-        </tr>`).join('') : '<tr><td colspan="8">No hay tickets.</td></tr>';
-    }
-
-    // Mostrar/ocultar la lista
-    $('ver').addEventListener('click', () => {
-      $('seccion').hidden = !$('seccion').hidden;
-      $('ver').textContent = $('seccion').hidden ? 'Ver todos los tickets' : 'Ocultar tickets';
-      mostrarError(cargar());
-    });
-
-    // Paginación y filtro
-    $('anterior').addEventListener('click', () => { pagina--; mostrarError(cargar()); });
-    $('siguiente').addEventListener('click', () => { pagina++; mostrarError(cargar()); });
-    $('filtro').addEventListener('change', () => { pagina = 1; mostrarError(cargar()); });
-
-    // Mensaje si falla la carga
-    function mostrarError(promesa) {
-      promesa.catch(() => { $('lista').innerHTML = '<tr><td colspan="8">No se pudo conectar con el servidor.</td></tr>'; });
-    }
-
-    // Crear o guardar edición
-    $('form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const datos = {
-        cliente: $('cliente').value,
-        modulo_sap: $('modulo_sap').value,
-        descripcion: $('descripcion').value,
-        prioridad: $('prioridad').value,
-      };
-      try {
-        if (editandoId) await api(`/api/tickets/${editandoId}`, 'PUT', datos);
-        else await api('/api/tickets', 'POST', datos);
-        limpiar();
-        cargar();
-      } catch (err) { alert(err.message); }
-    });
-
-    // Cambiar estado desde la tabla
-    async function cambiarEstado(id, estado) {
-      await api(`/api/tickets/${id}`, 'PUT', { estado }).catch((err) => alert(err.message));
-      mostrarError(cargar()); // refresca etiqueta y filtro
-    }
-
-    // Pasar un ticket al formulario
-    function editar(id) {
-      const t = tickets.find((x) => x.id === id);
-      editandoId = id;
-      $('cliente').value = t.cliente;
-      $('modulo_sap').value = t.modulo_sap;
-      $('descripcion').value = t.descripcion;
-      $('prioridad').value = t.prioridad;
-      $('titulo').textContent = `Editar ticket #${id}`;
-      $('guardar').textContent = 'Guardar cambios';
-      $('cancelar').hidden = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // Borrar ticket
-    async function eliminar(id) {
-      if (!confirm(`¿Eliminar el ticket #${id}?`)) return;
-      await api(`/api/tickets/${id}`, 'DELETE').catch((err) => alert(err.message));
-      if (editandoId === id) limpiar();
-      cargar();
-    }
-
-    // Volver al modo "crear"
-    function limpiar() {
-      editandoId = null;
-      $('form').reset();
-      $('titulo').textContent = 'Nuevo ticket';
-      $('guardar').textContent = 'Crear ticket';
-      $('cancelar').hidden = true;
-    }
-
-    $('cancelar').addEventListener('click', limpiar);
-  </script>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
